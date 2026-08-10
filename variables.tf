@@ -46,6 +46,8 @@ variable "repositories" {
     database_secret_name = string
     is_cron              = bool
     schedule             = optional(string)
+    port                 = optional(number)
+    image_version        = optional(string)
   }))
   description = "List of repositories"
 }
