@@ -128,6 +128,7 @@ def main():
                 get_desired_key("databaseSecretName", args.out_case): v["databaseSecretName"],
                 get_desired_key("port", args.out_case): 8080 + idx,
                 get_desired_key("imageVersion", args.out_case): "latest",
+                get_desired_key("isCron", args.out_case): v.get("isCron", False),
             })
     else:
         print(f"Warning: {rds_name_map_key} not found or not a map in tf_outputs.")
