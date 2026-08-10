@@ -149,8 +149,12 @@ resource "aws_lb" "internal" {
   enable_deletion_protection = false
 }
 
+locals {
+  http_repositories = { for repo in var.repositories : repo.name => repo if !repo.is_cron }
+}
+
 resource "aws_lb_target_group" "internal" {
-  for_each = { for repo in var.repositories : repo.name => repo }
+  for_each = local.http_repositories
 
   name        = "${var.environment}-${each.key}-int-tg"
   target_type = "lambda"
@@ -184,10 +188,10 @@ resource "aws_lb_listener" "internal" {
 }
 
 resource "aws_lb_listener_rule" "internal" {
-  for_each = { for repo in var.repositories : repo.name => repo }
+  for_each = local.http_repositories
 
   listener_arn = aws_lb_listener.internal.arn
-  priority     = 100 + index([for repo in var.repositories : repo.name], each.key)
+  priority     = 100 + index(sort(keys(local.http_repositories)), each.key)
 
   action {
     type             = "forward"
@@ -240,13 +244,14 @@ module "api_lambda" {
   database_secret_name              = each.value.database_secret_name
   lambda_role_arn                   = aws_iam_role.api.arn
   schedule                          = each.value.is_cron ? coalesce(each.value.schedule, "cron(0 0 * * ? *)") : null
+  is_cron                           = each.value.is_cron
   security_group_ids                = [aws_security_group.api.id]
-  enable_snapstart                  = each.value.name == "auth" ? false : true
+  enable_snapstart                  = each.value.is_cron ? false : (each.value.name == "auth" ? false : true)
   provisioned_concurrent_executions = each.value.name == "auth" ? 1 : 0
 }
 
 resource "aws_lambda_permission" "internal" {
-  for_each = { for repo in var.repositories : repo.name => repo }
+  for_each = local.http_repositories
 
   statement_id  = "AllowInternalALBInvoke-${each.key}"
   action        = "lambda:InvokeFunction"
@@ -257,7 +262,7 @@ resource "aws_lambda_permission" "internal" {
 }
 
 resource "aws_lb_target_group_attachment" "internal" {
-  for_each = { for repo in var.repositories : repo.name => repo }
+  for_each = local.http_repositories
 
   target_group_arn = aws_lb_target_group.internal[each.key].arn
   target_id        = "${module.api_lambda[each.key].function_arn}:live"
@@ -280,9 +285,9 @@ module "apigateway" {
   ]
 
   services = {
-    for repo in var.repositories : repo.name => {
-      lambda_invoke_arn    = module.api_lambda[repo.name].invoke_arn
-      lambda_function_name = module.api_lambda[repo.name].function_name
+    for name, repo in local.http_repositories : name => {
+      lambda_invoke_arn    = module.api_lambda[name].invoke_arn
+      lambda_function_name = module.api_lambda[name].function_name
     }
   }
 }

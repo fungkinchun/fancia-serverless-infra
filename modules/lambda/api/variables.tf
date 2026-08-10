@@ -87,3 +87,8 @@ variable "schedule" {
   type        = string
   default     = null
 }
+variable "is_cron" {
+  type        = bool
+  description = "Batch/cron Lambda: no web adapter, longer timeout, EventBridge only."
+  default     = false
+}

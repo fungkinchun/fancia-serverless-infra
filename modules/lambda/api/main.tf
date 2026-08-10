@@ -15,45 +15,48 @@ resource "aws_lambda_function" "api" {
   handler       = "run.sh"
   runtime       = "java25"
   memory_size   = 1024
-  timeout       = 60
+  timeout       = var.is_cron ? 300 : 60
   architectures = ["x86_64"]
   publish       = true
-  layers        = [local.lambda_web_adapter_layer_arn]
+  layers        = var.is_cron ? [] : [local.lambda_web_adapter_layer_arn]
 
   dynamic "snap_start" {
-    for_each = var.enable_snapstart ? [1] : []
+    for_each = var.enable_snapstart && !var.is_cron ? [1] : []
     content {
       apply_on = "PublishedVersions"
     }
   }
 
   environment {
-    variables = {
-      AWS_LAMBDA_EXEC_WRAPPER = "/opt/bootstrap"
-      PORT                    = "8080"
-      JAVA_TOOL_OPTIONS       = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
-
-      ENV                                = var.environment
-      PROJECT_NAME                       = var.project_name
-      REPO_NAME                          = var.repo_name
-      DOMAIN_NAME                        = var.domain_name
-      SPRING_PROFILES_ACTIVE             = var.environment
-      AWS_RDS_SECRET_NAME                = var.database_secret_name
-      DATABASE_URL                       = "jdbc-secretsmanager:postgresql://${var.database_name}-rds.${var.domain_name}:5432/${var.project_name}"
-      AUTH_SERVICE_URL                   = "https://api.${var.domain_name}/auth"
-      AUTH_INTERNAL_SERVICE_URL          = "http://internal.${var.domain_name}/auth"
-      COMMON_SERVICE_URL                 = "https://api.${var.domain_name}/common"
-      COMMON_INTERNAL_SERVICE_URL        = "http://internal.${var.domain_name}/common"
-      USER_SERVICE_URL                   = "https://api.${var.domain_name}/user"
-      USER_INTERNAL_SERVICE_URL          = "http://internal.${var.domain_name}/user"
-      INTERESTGROUP_SERVICE_URL          = "https://api.${var.domain_name}/interestgroup"
-      INTERESTGROUP_INTERNAL_SERVICE_URL = "http://internal.${var.domain_name}/interestgroup"
-      EVENT_SERVICE_URL                  = "https://api.${var.domain_name}/event"
-      EVENT_INTERNAL_SERVICE_URL         = "http://internal.${var.domain_name}/event"
-      CDN_URL                            = "https://cdn.${var.domain_name}"
-      MAX_POOL_SIZE                      = "5"
-      MIN_IDLE                           = "0"
-    }
+    variables = merge(
+      {
+        JAVA_TOOL_OPTIONS       = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+        ENV                     = var.environment
+        PROJECT_NAME            = var.project_name
+        REPO_NAME               = var.repo_name
+        DOMAIN_NAME             = var.domain_name
+        SPRING_PROFILES_ACTIVE  = var.environment
+        AWS_RDS_SECRET_NAME     = var.database_secret_name
+        DATABASE_URL            = "jdbc-secretsmanager:postgresql://${var.database_name}-rds.${var.domain_name}:5432/${var.project_name}"
+        AUTH_SERVICE_URL                   = "https://api.${var.domain_name}/auth"
+        AUTH_INTERNAL_SERVICE_URL          = "http://internal.${var.domain_name}/auth"
+        COMMON_SERVICE_URL                 = "https://api.${var.domain_name}/common"
+        COMMON_INTERNAL_SERVICE_URL        = "http://internal.${var.domain_name}/common"
+        USER_SERVICE_URL                   = "https://api.${var.domain_name}/user"
+        USER_INTERNAL_SERVICE_URL          = "http://internal.${var.domain_name}/user"
+        INTERESTGROUP_SERVICE_URL          = "https://api.${var.domain_name}/interestgroup"
+        INTERESTGROUP_INTERNAL_SERVICE_URL = "http://internal.${var.domain_name}/interestgroup"
+        EVENT_SERVICE_URL                  = "https://api.${var.domain_name}/event"
+        EVENT_INTERNAL_SERVICE_URL         = "http://internal.${var.domain_name}/event"
+        CDN_URL                            = "https://cdn.${var.domain_name}"
+        MAX_POOL_SIZE                      = "5"
+        MIN_IDLE                           = "0"
+      },
+      var.is_cron ? {} : {
+        AWS_LAMBDA_EXEC_WRAPPER = "/opt/bootstrap"
+        PORT                    = "8080"
+      },
+    )
   }
 
   vpc_config {
