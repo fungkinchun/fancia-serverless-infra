@@ -75,3 +75,15 @@ variable "provisioned_concurrent_executions" {
   description = "Number of provisioned concurrent executions on the live alias. Mutually exclusive with enable_snapstart."
   default     = 0
 }
+
+variable "timezone" {
+  description = "Timezone for schedules (e.g. Europe/London)"
+  type        = string
+  default     = "Europe/London"
+}
+
+variable "schedule" {
+  description = "Cron expression for the scheduled Lambda invoke"
+  type        = string
+  default     = "cron(0 8 ? * MON-FRI *)"
+}

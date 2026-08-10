@@ -44,6 +44,8 @@ variable "repositories" {
     name                 = string
     database_name        = string
     database_secret_name = string
+    is_cron              = bool
+    schedule             = optional(string)
   }))
   description = "List of repositories"
 }

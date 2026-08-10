@@ -154,7 +154,6 @@ resource "aws_lb_target_group" "internal" {
 
   name        = "${var.environment}-${each.key}-int-tg"
   target_type = "lambda"
-  vpc_id      = var.vpc_id
 
   health_check {
     enabled             = true
@@ -240,6 +239,7 @@ module "api_lambda" {
   database_name                     = each.value.database_name
   database_secret_name              = each.value.database_secret_name
   lambda_role_arn                   = aws_iam_role.api.arn
+  schedule                          = each.value.is_cron ? each.value.schedule : null
   security_group_ids                = [aws_security_group.api.id]
   enable_snapstart                  = each.value.name == "auth" ? false : true
   provisioned_concurrent_executions = each.value.name == "auth" ? 1 : 0
