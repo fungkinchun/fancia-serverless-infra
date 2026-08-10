@@ -78,6 +78,8 @@ resource "aws_lambda_provisioned_concurrency_config" "api" {
 }
 
 data "aws_iam_policy_document" "scheduler_assume" {
+  count = var.schedule != null ? 1 : 0
+
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -89,13 +91,17 @@ data "aws_iam_policy_document" "scheduler_assume" {
 }
 
 resource "aws_iam_role" "scheduler" {
+  count = var.schedule != null ? 1 : 0
+
   name               = "${var.project_name}-${var.environment}-${var.repo_name}-scheduler"
-  assume_role_policy = data.aws_iam_policy_document.scheduler_assume.json
+  assume_role_policy = data.aws_iam_policy_document.scheduler_assume[0].json
 }
 
 resource "aws_iam_role_policy" "scheduler_invoke" {
+  count = var.schedule != null ? 1 : 0
+
   name = "invoke-lambda"
-  role = aws_iam_role.scheduler.id
+  role = aws_iam_role.scheduler[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -113,6 +119,8 @@ resource "aws_iam_role_policy" "scheduler_invoke" {
 }
 
 resource "aws_scheduler_schedule" "api" {
+  count = var.schedule != null ? 1 : 0
+
   name                         = "${var.project_name}-${var.environment}-${var.repo_name}"
   schedule_expression          = var.schedule
   schedule_expression_timezone = var.timezone
@@ -123,16 +131,18 @@ resource "aws_scheduler_schedule" "api" {
 
   target {
     arn      = aws_lambda_alias.live.arn
-    role_arn = aws_iam_role.scheduler.arn
+    role_arn = aws_iam_role.scheduler[0].arn
   }
 }
 
 resource "aws_lambda_permission" "scheduler" {
+  count = var.schedule != null ? 1 : 0
+
   statement_id  = "AllowExecutionFromScheduler"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.api.function_name
   qualifier     = aws_lambda_alias.live.name
   principal     = "scheduler.amazonaws.com"
-  source_arn    = aws_scheduler_schedule.api.arn
+  source_arn    = aws_scheduler_schedule.api[0].arn
 }
 

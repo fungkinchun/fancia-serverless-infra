@@ -83,7 +83,7 @@ variable "timezone" {
 }
 
 variable "schedule" {
-  description = "Cron expression for the scheduled Lambda invoke"
+  description = "Cron expression for the scheduled Lambda invoke. Null skips creating the schedule."
   type        = string
-  default     = "cron(0 8 ? * MON-FRI *)"
+  default     = null
 }

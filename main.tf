@@ -239,7 +239,7 @@ module "api_lambda" {
   database_name                     = each.value.database_name
   database_secret_name              = each.value.database_secret_name
   lambda_role_arn                   = aws_iam_role.api.arn
-  schedule                          = each.value.is_cron ? each.value.schedule : null
+  schedule                          = each.value.is_cron ? coalesce(each.value.schedule, "cron(0 0 * * ? *)") : null
   security_group_ids                = [aws_security_group.api.id]
   enable_snapstart                  = each.value.name == "auth" ? false : true
   provisioned_concurrent_executions = each.value.name == "auth" ? 1 : 0
