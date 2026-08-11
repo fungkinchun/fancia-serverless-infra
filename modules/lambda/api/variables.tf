@@ -92,3 +92,9 @@ variable "is_cron" {
   description = "Batch/cron Lambda: no web adapter, longer timeout, EventBridge only."
   default     = false
 }
+
+variable "handler" {
+  type        = string
+  description = "Lambda handler. Defaults to run.sh for APIs and event-cron Java handler for is_cron."
+  default     = null
+}
