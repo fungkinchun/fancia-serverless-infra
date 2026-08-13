@@ -114,6 +114,7 @@ def build_repositories(secret: dict, tf_outputs: dict, out_case: str):
             port = 8080 + len(repositories)
 
         schedule = repo.get('schedule', repo.get('Schedule'))
+        handler = repo.get('handler', repo.get('Handler'))
 
         entry = {
             get_desired_key('name', out_case): name,
@@ -125,6 +126,8 @@ def build_repositories(secret: dict, tf_outputs: dict, out_case: str):
         }
         if schedule:
             entry[get_desired_key('schedule', out_case)] = schedule
+        if handler:
+            entry[get_desired_key('handler', out_case)] = handler
 
         print(f'repository {name}: is_cron={is_cron} schedule={schedule!r} port={port}')
         repositories.append(entry)

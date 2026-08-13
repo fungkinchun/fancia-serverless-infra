@@ -48,6 +48,7 @@ variable "repositories" {
     schedule             = optional(string)
     port                 = optional(number)
     image_version        = optional(string)
+    handler              = optional(string)
   }))
-  description = "List of repositories"
+  description = "List of repositories. Cron repos must set handler (e.g. com.fancia.backend.user.LambdaHandler::handleRequest)."
 }

@@ -95,6 +95,6 @@ variable "is_cron" {
 
 variable "handler" {
   type        = string
-  description = "Lambda handler. Defaults to run.sh for APIs and event-cron Java handler for is_cron."
+  description = "Lambda handler from repositories[].handler. Defaults to run.sh when unset (HTTP APIs)."
   default     = null
 }

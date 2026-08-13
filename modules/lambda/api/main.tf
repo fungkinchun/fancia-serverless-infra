@@ -12,7 +12,7 @@ resource "aws_lambda_function" "api" {
   s3_bucket = "${var.project_name}-${var.environment}-backend-artifacts"
   s3_key    = "${var.repo_name}.zip"
 
-  handler       = coalesce(var.handler, var.is_cron ? "com.fancia.backend.event.LambdaHandler::handleRequest" : "run.sh")
+  handler       = coalesce(var.handler, "run.sh")
   runtime       = "java25"
   memory_size   = 1024
   timeout       = var.is_cron ? 300 : 60
