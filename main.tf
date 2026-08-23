@@ -247,8 +247,8 @@ module "api_lambda" {
   is_cron                           = each.value.is_cron
   handler                           = try(each.value.handler, null)
   security_group_ids                = [aws_security_group.api.id]
-  enable_snapstart                  = each.value.is_cron ? false : (each.value.name == "auth" ? false : true)
-  provisioned_concurrent_executions = each.value.name == "auth" ? 1 : 0
+  enable_snapstart                  = each.value.is_cron ? false : true
+  provisioned_concurrent_executions = 0
 }
 
 resource "aws_lambda_permission" "internal" {
