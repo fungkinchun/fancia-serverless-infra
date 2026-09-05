@@ -52,6 +52,8 @@ resource "aws_lambda_function" "api" {
         VENUE_INTERNAL_SERVICE_URL         = "http://internal.${var.domain_name}/venue"
         PAYMENT_SERVICE_URL                = "https://api.${var.domain_name}/payment"
         PAYMENT_INTERNAL_SERVICE_URL       = "http://internal.${var.domain_name}/payment"
+        NOTIFICATION_SERVICE_URL           = "https://api.${var.domain_name}/notification"
+        NOTIFICATION_INTERNAL_SERVICE_URL  = "http://internal.${var.domain_name}/notification"
         UPLOAD_SERVICE_URL                 = "https://api.${var.domain_name}/upload"
         UPLOAD_INTERNAL_SERVICE_URL        = "http://internal.${var.domain_name}/upload"
         CDN_URL                            = "https://cdn.${var.domain_name}"
