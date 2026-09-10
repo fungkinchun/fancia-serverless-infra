@@ -22,9 +22,11 @@ provider "aws" {
 }
 
 locals {
-  is_prod      = var.environment == "prod"
-  dns_name     = var.domain_name
-  apex_domain  = startswith(var.domain_name, "${var.environment}.") ? trimprefix(var.domain_name, "${var.environment}.") : var.domain_name
+  is_prod = var.environment == "prod"
+  dns_name = var.domain_name
+  apex_domain = (
+    !local.is_prod && startswith(var.domain_name, "${var.environment}.")
+  ) ? trimprefix(var.domain_name, "${var.environment}.") : var.domain_name
   rds_dns      = coalesce(var.rds_dns_domain, local.apex_domain)
   internal_dns = coalesce(var.internal_dns_domain, local.dns_name)
   jdbc_database_name = coalesce(
@@ -275,6 +277,8 @@ module "api_lambda" {
   security_group_ids                = [aws_security_group.api.id]
   enable_snapstart                  = each.value.is_cron ? false : true
   provisioned_concurrent_executions = 0
+
+  depends_on = [aws_iam_role_policy.api]
 }
 
 resource "aws_lambda_permission" "internal" {
