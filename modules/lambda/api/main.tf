@@ -64,7 +64,7 @@ resource "aws_lambda_function" "api" {
         UPLOAD_SERVICE_URL                 = "https://api.${var.domain_name}/upload"
         UPLOAD_INTERNAL_SERVICE_URL        = "http://internal.${local.internal_dns}/upload"
         CDN_URL                            = "https://cdn.${var.domain_name}"
-        MAX_POOL_SIZE                      = "5"
+        MAX_POOL_SIZE                      = "2"
         MIN_IDLE                           = "0"
       },
       var.is_cron ? {} : {
