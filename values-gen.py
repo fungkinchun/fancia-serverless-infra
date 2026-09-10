@@ -68,7 +68,13 @@ def resolve_value(key: str, secret: dict, tf_outputs: dict):
     raise KeyError(key)
 
 
-def build_repositories(secret: dict, tf_outputs: dict, out_case: str):
+def jdbc_database_name(project_name: str, environment: str) -> str:
+    if environment == 'prod':
+        return project_name
+    return f'{project_name}_{environment}'
+
+
+def build_repositories(secret: dict, tf_outputs: dict, out_case: str, jdbc_db: str):
     rds_name_map = tf_outputs.get('rds_secret_name_map')
     if not isinstance(rds_name_map, dict):
         print('Warning: rds_secret_name_map not found or not a map in tf_outputs.')
@@ -79,7 +85,6 @@ def build_repositories(secret: dict, tf_outputs: dict, out_case: str):
         print('Warning: secret has no repositories list; is_cron/schedule cannot be applied.')
         return []
 
-    # Re-running on already-generated tfvars loses secret fields like is_service.
     if all(
         ('database_secret_name' in r or 'databaseSecretName' in r) for r in secret_repos
     ) and not any(('is_service' in r or 'isService' in r) for r in secret_repos):
@@ -120,6 +125,7 @@ def build_repositories(secret: dict, tf_outputs: dict, out_case: str):
             get_desired_key('name', out_case): name,
             get_desired_key('databaseName', out_case): rds['databaseName'],
             get_desired_key('databaseSecretName', out_case): rds['databaseSecretName'],
+            get_desired_key('jdbcDatabaseName', out_case): jdbc_db,
             get_desired_key('port', out_case): port,
             get_desired_key('imageVersion', out_case): 'latest',
             get_desired_key('isCron', out_case): is_cron,
@@ -139,6 +145,7 @@ def build_repositories(secret: dict, tf_outputs: dict, out_case: str):
             get_desired_key('name', out_case): name,
             get_desired_key('databaseName', out_case): rds['databaseName'],
             get_desired_key('databaseSecretName', out_case): rds['databaseSecretName'],
+            get_desired_key('jdbcDatabaseName', out_case): jdbc_db,
             get_desired_key('port', out_case): 8080 + len(repositories),
             get_desired_key('imageVersion', out_case): 'latest',
             get_desired_key('isCron', out_case): False,
@@ -220,8 +227,17 @@ def main():
                 f"Warning: {camel_to_upper_snake(key)} not found in environment, secret, or tf_outputs."
             )
 
+    project_name = (
+        values.get(get_desired_key('projectName', args.out_case))
+        or secret.get('project_name')
+        or secret.get('projectName')
+        or 'fancia'
+    )
+    jdbc_db = jdbc_database_name(project_name, environment)
+    values[get_desired_key('jdbcDatabaseName', args.out_case)] = jdbc_db
+
     values[get_desired_key('repositories', args.out_case)] = build_repositories(
-        secret, tf_outputs, args.out_case
+        secret, tf_outputs, args.out_case, jdbc_db
     )
 
     secrets_list = []

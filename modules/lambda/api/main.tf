@@ -2,6 +2,12 @@ data "aws_region" "current" {}
 
 locals {
   lambda_web_adapter_layer_arn = "arn:aws:lambda:${data.aws_region.current.name}:753240598075:layer:LambdaAdapterLayerX86:27"
+  internal_dns                 = coalesce(var.internal_dns_domain, var.domain_name)
+  rds_dns                      = coalesce(var.rds_dns_domain, var.internal_dns_domain, var.domain_name)
+  jdbc_db = coalesce(
+    var.jdbc_database_name,
+    var.environment == "prod" ? var.project_name : "${var.project_name}_${var.environment}"
+  )
 }
 
 resource "aws_lambda_function" "api" {
@@ -30,32 +36,33 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = merge(
       {
-        JAVA_TOOL_OPTIONS       = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
-        ENV                     = var.environment
-        PROJECT_NAME            = var.project_name
-        REPO_NAME               = var.repo_name
-        DOMAIN_NAME             = var.domain_name
-        SPRING_PROFILES_ACTIVE  = var.environment
-        AWS_RDS_SECRET_NAME     = var.database_secret_name
-        DATABASE_URL            = "jdbc-secretsmanager:postgresql://${var.database_name}-rds.${var.domain_name}:5432/${var.project_name}"
+        JAVA_TOOL_OPTIONS                  = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+        ENV                                = var.environment
+        PROJECT_NAME                       = var.project_name
+        REPO_NAME                          = var.repo_name
+        DOMAIN_NAME                        = var.domain_name
+        SPRING_PROFILES_ACTIVE             = var.environment
+        AWS_RDS_SECRET_NAME                = var.database_secret_name
+        DATABASE_URL                       = "jdbc-secretsmanager:postgresql://${var.database_name}-rds.${local.rds_dns}:5432/${local.jdbc_db}"
+        JDBC_DATABASE_NAME                 = local.jdbc_db
         AUTH_SERVICE_URL                   = "https://api.${var.domain_name}/auth"
-        AUTH_INTERNAL_SERVICE_URL          = "http://internal.${var.domain_name}/auth"
+        AUTH_INTERNAL_SERVICE_URL          = "http://internal.${local.internal_dns}/auth"
         COMMON_SERVICE_URL                 = "https://api.${var.domain_name}/common"
-        COMMON_INTERNAL_SERVICE_URL        = "http://internal.${var.domain_name}/common"
+        COMMON_INTERNAL_SERVICE_URL        = "http://internal.${local.internal_dns}/common"
         USER_SERVICE_URL                   = "https://api.${var.domain_name}/user"
-        USER_INTERNAL_SERVICE_URL          = "http://internal.${var.domain_name}/user"
+        USER_INTERNAL_SERVICE_URL          = "http://internal.${local.internal_dns}/user"
         INTERESTGROUP_SERVICE_URL          = "https://api.${var.domain_name}/interestgroup"
-        INTERESTGROUP_INTERNAL_SERVICE_URL = "http://internal.${var.domain_name}/interestgroup"
+        INTERESTGROUP_INTERNAL_SERVICE_URL = "http://internal.${local.internal_dns}/interestgroup"
         EVENT_SERVICE_URL                  = "https://api.${var.domain_name}/event"
-        EVENT_INTERNAL_SERVICE_URL         = "http://internal.${var.domain_name}/event"
+        EVENT_INTERNAL_SERVICE_URL         = "http://internal.${local.internal_dns}/event"
         VENUE_SERVICE_URL                  = "https://api.${var.domain_name}/venue"
-        VENUE_INTERNAL_SERVICE_URL         = "http://internal.${var.domain_name}/venue"
+        VENUE_INTERNAL_SERVICE_URL         = "http://internal.${local.internal_dns}/venue"
         PAYMENT_SERVICE_URL                = "https://api.${var.domain_name}/payment"
-        PAYMENT_INTERNAL_SERVICE_URL       = "http://internal.${var.domain_name}/payment"
+        PAYMENT_INTERNAL_SERVICE_URL       = "http://internal.${local.internal_dns}/payment"
         NOTIFICATION_SERVICE_URL           = "https://api.${var.domain_name}/notification"
-        NOTIFICATION_INTERNAL_SERVICE_URL  = "http://internal.${var.domain_name}/notification"
+        NOTIFICATION_INTERNAL_SERVICE_URL  = "http://internal.${local.internal_dns}/notification"
         UPLOAD_SERVICE_URL                 = "https://api.${var.domain_name}/upload"
-        UPLOAD_INTERNAL_SERVICE_URL        = "http://internal.${var.domain_name}/upload"
+        UPLOAD_INTERNAL_SERVICE_URL        = "http://internal.${local.internal_dns}/upload"
         CDN_URL                            = "https://cdn.${var.domain_name}"
         MAX_POOL_SIZE                      = "5"
         MIN_IDLE                           = "0"

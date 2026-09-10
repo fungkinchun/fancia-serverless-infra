@@ -5,7 +5,7 @@ variable "project_name" {
 
 variable "domain_name" {
   type        = string
-  description = "The domain name for the certificate (e.g., example.com)"
+  description = "The domain name for the certificate"
 }
 
 variable "environment" {
@@ -15,10 +15,10 @@ variable "environment" {
 
 variable "region" {
   type        = string
-  description = "AWS region for the EKS cluster"
+  description = "AWS region"
 }
 
 variable "public_zone_id" {
   type        = string
-  description = "Route 53 public hosted zone ID for ACM DNS validation"
+  description = "Route 53 public hosted zone ID"
 }

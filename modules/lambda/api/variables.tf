@@ -36,7 +36,19 @@ variable "image_tag" {
 
 variable "domain_name" {
   type        = string
-  description = "The apex domain name"
+  description = "The domain name for the project"
+}
+
+variable "internal_dns_domain" {
+  type        = string
+  description = "The domain name for internal DNS"
+  default     = null
+}
+
+variable "rds_dns_domain" {
+  type        = string
+  description = "The domain name for RDS DNS"
+  default     = null
 }
 
 variable "repo_name" {
@@ -47,6 +59,12 @@ variable "repo_name" {
 variable "database_name" {
   type        = string
   description = "The name of the RDS database"
+}
+
+variable "jdbc_database_name" {
+  type        = string
+  description = "The JDBC database name"
+  default     = null
 }
 
 variable "database_secret_name" {
@@ -66,35 +84,36 @@ variable "security_group_ids" {
 
 variable "enable_snapstart" {
   type        = bool
-  description = "Enable SnapStart on published versions. Mutually exclusive with provisioned_concurrent_executions."
+  description = "Enable SnapStart on published versions"
   default     = true
 }
 
 variable "provisioned_concurrent_executions" {
   type        = number
-  description = "Number of provisioned concurrent executions on the live alias. Mutually exclusive with enable_snapstart."
+  description = "Number of provisioned concurrent executions"
   default     = 0
 }
 
 variable "timezone" {
-  description = "Timezone for schedules (e.g. Europe/London)"
   type        = string
+  description = "Timezone for schedules"
   default     = "Europe/London"
 }
 
 variable "schedule" {
-  description = "Cron expression for the scheduled Lambda invoke. Null skips creating the schedule."
   type        = string
+  description = "Cron expression for the scheduled Lambda invoke"
   default     = null
 }
+
 variable "is_cron" {
   type        = bool
-  description = "Batch/cron Lambda: no web adapter, longer timeout, EventBridge only."
+  description = "Whether this is a cron Lambda"
   default     = false
 }
 
 variable "handler" {
   type        = string
-  description = "Lambda handler from repositories[].handler. Defaults to run.sh when unset (HTTP APIs)."
+  description = "The Lambda handler"
   default     = null
 }

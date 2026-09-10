@@ -10,22 +10,22 @@ variable "environment" {
 
 variable "domain_name" {
   type        = string
-  description = "Apex domain name (custom domain will be api.{domain_name})"
+  description = "The domain name for the project"
 }
 
 variable "public_zone_id" {
   type        = string
-  description = "Route 53 public hosted zone ID for the api.{domain_name} alias record"
+  description = "Route 53 public hosted zone ID"
 }
 
 variable "private_zone_id" {
   type        = string
-  description = "Route 53 private hosted zone ID for in-VPC resolution of api.{domain_name}"
+  description = "Route 53 private hosted zone ID"
 }
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "ACM certificate ARN in the same region as the API Gateway (REGIONAL endpoint)"
+  description = "ACM certificate ARN"
 }
 
 variable "cors_allowed_origins" {
@@ -38,5 +38,5 @@ variable "services" {
     lambda_invoke_arn    = string
     lambda_function_name = string
   }))
-  description = "Map of service path prefixes to Lambda integration targets (key = URL prefix, e.g. auth)"
+  description = "Map of service path prefixes to Lambda targets"
 }

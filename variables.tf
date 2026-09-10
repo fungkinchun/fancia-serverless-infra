@@ -16,7 +16,19 @@ variable "aws_region" {
 
 variable "domain_name" {
   type        = string
-  description = "The apex domain name"
+  description = "The domain name for the project"
+}
+
+variable "internal_dns_domain" {
+  type        = string
+  description = "The domain name for internal DNS"
+  default     = null
+}
+
+variable "rds_dns_domain" {
+  type        = string
+  description = "The domain name for RDS DNS"
+  default     = null
 }
 
 variable "public_hosted_zone_id" {
@@ -26,7 +38,7 @@ variable "public_hosted_zone_id" {
 
 variable "private_hosted_zone_id" {
   type        = string
-  description = "Route 53 private hosted zone ID for VPC DNS"
+  description = "Route 53 private hosted zone ID"
 }
 
 variable "vpc_id" {
@@ -44,11 +56,18 @@ variable "repositories" {
     name                 = string
     database_name        = string
     database_secret_name = string
+    jdbc_database_name   = optional(string)
     is_cron              = bool
     schedule             = optional(string)
     port                 = optional(number)
     image_version        = optional(string)
     handler              = optional(string)
   }))
-  description = "List of repositories. Cron repos must set handler (e.g. com.fancia.backend.user.LambdaHandler::handleRequest)."
+  description = "List of repositories"
+}
+
+variable "jdbc_database_name" {
+  type        = string
+  description = "The JDBC database name"
+  default     = null
 }

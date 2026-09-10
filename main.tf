@@ -165,7 +165,7 @@ resource "aws_lb_target_group" "internal" {
     unhealthy_threshold = 2
     interval            = 35
     timeout             = 30
-    path                = "/${each.key}/actuator/health"
+    path                = "/${each.key}/actuator/health/liveness"
     matcher             = "200-399"
   }
   depends_on = [module.api_lambda]
@@ -201,6 +201,12 @@ resource "aws_lb_listener_rule" "internal" {
   condition {
     path_pattern {
       values = ["/${each.key}", "/${each.key}/*"]
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["internal.${var.domain_name}"]
     }
   }
 }
@@ -239,9 +245,12 @@ module "api_lambda" {
   subnet_ids                        = var.subnet_ids
   ecr_repository_name               = "${var.project_name}-backend-${each.value.name}"
   domain_name                       = var.domain_name
+  internal_dns_domain               = var.internal_dns_domain
+  rds_dns_domain                    = var.rds_dns_domain
   repo_name                         = each.value.name
   database_name                     = each.value.database_name
   database_secret_name              = each.value.database_secret_name
+  jdbc_database_name                = coalesce(try(each.value.jdbc_database_name, null), var.jdbc_database_name)
   lambda_role_arn                   = aws_iam_role.api.arn
   schedule                          = each.value.is_cron ? coalesce(each.value.schedule, "cron(0 0 * * ? *)") : null
   is_cron                           = each.value.is_cron
@@ -279,11 +288,15 @@ module "apigateway" {
   public_zone_id      = var.public_hosted_zone_id
   private_zone_id     = var.private_hosted_zone_id
   acm_certificate_arn = module.api_certificate.acm_certificate_arn
-  cors_allowed_origins = [
+  cors_allowed_origins = distinct(compact([
     "https://${var.domain_name}",
     "https://www.${var.domain_name}",
-    "http://localhost:3000"
-  ]
+    "https://dev.${replace(var.domain_name, "dev.", "")}",
+    "https://fancia.co.uk",
+    "https://www.fancia.co.uk",
+    "https://dev.fancia.co.uk",
+    "http://localhost:3000",
+  ]))
 
   services = {
     for name, repo in local.http_repositories : name => {
