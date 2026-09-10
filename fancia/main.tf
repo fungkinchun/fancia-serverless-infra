@@ -23,10 +23,14 @@ provider "aws" {
 
 locals {
   is_prod = var.environment == "prod"
-  dns_name = var.domain_name
   apex_domain = (
     !local.is_prod && startswith(var.domain_name, "${var.environment}.")
   ) ? trimprefix(var.domain_name, "${var.environment}.") : var.domain_name
+  dns_name = local.is_prod ? local.apex_domain : (
+    startswith(var.domain_name, "${var.environment}.")
+    ? var.domain_name
+    : "${var.environment}.${local.apex_domain}"
+  )
   rds_dns      = coalesce(var.rds_dns_domain, local.apex_domain)
   internal_dns = coalesce(var.internal_dns_domain, local.dns_name)
   jdbc_database_name = coalesce(
