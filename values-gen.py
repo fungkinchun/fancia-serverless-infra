@@ -59,12 +59,14 @@ def resolve_value(key: str, secret: dict, tf_outputs: dict):
     snake_key = camel_to_snake(key)
     if upper_snake_key in os.environ:
         return os.environ[upper_snake_key]
+    if snake_key in tf_outputs:
+        return tf_outputs[snake_key]
+    if key in tf_outputs:
+        return tf_outputs[key]
     if snake_key in secret:
         return secret[snake_key]
     if key in secret:
         return secret[key]
-    if snake_key in tf_outputs:
-        return tf_outputs[snake_key]
     raise KeyError(key)
 
 
