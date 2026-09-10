@@ -4,7 +4,18 @@ Fancia is a social platform connecting people with shared interests for offline,
 
 ## infra
 
-This repository contains Terraform code to provision the infrastructure of Fancia. It consists of reusable modules that can be composed per environment (for example `dev`).
+This repository provisions the serverless API layer (Lambda, API Gateway, internal ALB). Like `infra`, the root stack instantiates the same env module twice:
+
+- `module.prod` → values from `terraform.tfvars.prod.json`
+- `module.dev` → values from `terraform.tfvars.dev.json`
+
+CI runs `values-gen.py` twice (`ENVIRONMENT=dev` / `ENVIRONMENT=prod`). Output is wrapped under that env name (snake_case), then:
+
+```bash
+terraform plan -var-file=terraform.tfvars.dev.json -var-file=terraform.tfvars.prod.json
+```
+
+Shared VPC, subnets, and Route53 zones come from `infra` outputs via values-gen.
 
 ### IMPORTANT
 

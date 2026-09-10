@@ -1,11 +1,11 @@
 variable "project_name" {
   type        = string
-  description = "The name of the project"
+  description = "Project name"
 }
 
 variable "environment" {
   type        = string
-  description = "The environment (e.g., dev, prod)"
+  description = "Environment name"
 }
 
 variable "region" {
@@ -15,105 +15,105 @@ variable "region" {
 
 variable "vpc_id" {
   type        = string
-  description = "VPC ID for Lambda"
+  description = "VPC ID"
 }
 
 variable "subnet_ids" {
   type        = list(string)
-  description = "Private subnet IDs for Lambda"
+  description = "Subnet IDs"
 }
 
 variable "ecr_repository_name" {
   type        = string
-  description = "ECR repository name for the API container image"
+  description = "ECR repository name"
 }
 
 variable "image_tag" {
   type        = string
-  description = "Container image tag to deploy"
+  description = "Image tag"
   default     = "latest"
 }
 
 variable "domain_name" {
   type        = string
-  description = "The domain name for the project"
+  description = "Environment DNS name"
 }
 
 variable "internal_dns_domain" {
   type        = string
-  description = "The domain name for internal DNS"
+  description = "Internal DNS domain"
   default     = null
 }
 
 variable "rds_dns_domain" {
   type        = string
-  description = "The domain name for RDS DNS"
+  description = "RDS DNS domain"
   default     = null
 }
 
 variable "repo_name" {
   type        = string
-  description = "The name of the repository"
+  description = "Repository name"
 }
 
 variable "database_name" {
   type        = string
-  description = "The name of the RDS database"
+  description = "RDS database name"
 }
 
 variable "jdbc_database_name" {
   type        = string
-  description = "The JDBC database name"
+  description = "JDBC database name"
   default     = null
 }
 
 variable "database_secret_name" {
   type        = string
-  description = "The name of the Secrets Manager secret containing RDS credentials"
+  description = "RDS secret name"
 }
 
 variable "lambda_role_arn" {
   type        = string
-  description = "ARN of the IAM role that the Lambda function will assume"
+  description = "Lambda role ARN"
 }
 
 variable "security_group_ids" {
   type        = list(string)
-  description = "List of security group IDs to attach to the Lambda function"
+  description = "Security group IDs"
 }
 
 variable "enable_snapstart" {
   type        = bool
-  description = "Enable SnapStart on published versions"
+  description = "Enable SnapStart"
   default     = true
 }
 
 variable "provisioned_concurrent_executions" {
   type        = number
-  description = "Number of provisioned concurrent executions"
+  description = "Provisioned concurrency"
   default     = 0
 }
 
 variable "timezone" {
   type        = string
-  description = "Timezone for schedules"
+  description = "Schedule timezone"
   default     = "Europe/London"
 }
 
 variable "schedule" {
   type        = string
-  description = "Cron expression for the scheduled Lambda invoke"
+  description = "Cron schedule"
   default     = null
 }
 
 variable "is_cron" {
   type        = bool
-  description = "Whether this is a cron Lambda"
+  description = "Cron Lambda"
   default     = false
 }
 
 variable "handler" {
   type        = string
-  description = "The Lambda handler"
+  description = "Lambda handler"
   default     = null
 }

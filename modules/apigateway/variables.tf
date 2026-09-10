@@ -1,26 +1,26 @@
 variable "project_name" {
   type        = string
-  description = "The name of the project"
+  description = "Project name"
 }
 
 variable "environment" {
   type        = string
-  description = "The environment (e.g., dev, prod)"
+  description = "Environment name"
 }
 
 variable "domain_name" {
   type        = string
-  description = "The domain name for the project"
+  description = "Environment DNS name"
 }
 
 variable "public_zone_id" {
   type        = string
-  description = "Route 53 public hosted zone ID"
+  description = "Public hosted zone ID"
 }
 
 variable "private_zone_id" {
   type        = string
-  description = "Route 53 private hosted zone ID"
+  description = "Private hosted zone ID"
 }
 
 variable "acm_certificate_arn" {
@@ -30,7 +30,7 @@ variable "acm_certificate_arn" {
 
 variable "cors_allowed_origins" {
   type        = list(string)
-  description = "Browser origins allowed by API Gateway CORS"
+  description = "CORS allowed origins"
 }
 
 variable "services" {
@@ -38,5 +38,5 @@ variable "services" {
     lambda_invoke_arn    = string
     lambda_function_name = string
   }))
-  description = "Map of service path prefixes to Lambda targets"
+  description = "Service Lambda targets"
 }

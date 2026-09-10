@@ -254,15 +254,33 @@ def main():
 
     values[get_desired_key('secrets', args.out_case)] = secrets_list
 
+    tf_keys = [
+        'projectName',
+        'awsRegion',
+        'domainName',
+        'vpcId',
+        'subnetIds',
+        'publicHostedZoneId',
+        'privateHostedZoneId',
+        'jdbcDatabaseName',
+        'repositories',
+    ]
+    wrapped = {}
+    for key in tf_keys:
+        desired = get_desired_key(key, args.out_case)
+        if desired in values:
+            wrapped[desired] = values[desired]
+    output = {get_desired_key(environment, args.out_case): wrapped}
+
     json_path = args.out_dir / f'{args.out_file}.json'
     with open(json_path, 'w') as f:
-        json.dump(values, f, indent=2)
+        json.dump(output, f, indent=2)
         f.write('\n')
     print(f'values.json generated successfully at {json_path}.')
 
     yaml_path = args.out_dir / f'{args.out_file}.yaml'
     with open(yaml_path, 'w') as f:
-        yaml.dump(values, f, default_flow_style=False, sort_keys=False)
+        yaml.dump(output, f, default_flow_style=False, sort_keys=False)
     print(f'values.yaml generated successfully at {yaml_path}.')
 
 
