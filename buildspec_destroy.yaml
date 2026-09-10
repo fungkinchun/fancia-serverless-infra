@@ -8,17 +8,20 @@ phases:
       - unzip -o terraform.zip
       - mv terraform /usr/local/bin/
       - terraform --version
+      - pip install pyyaml
   pre_build:
     commands:
       - echo "Fetching secrets from Secrets Manager..."
-      - SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id ${AWS_SECRET_NAME} --query SecretString --output text | jq . >  terraform.tfvars.json || { echo "Failed to fetch secret"; exit 1; })
+      - aws secretsmanager get-secret-value --secret-id ${AWS_SECRET_NAME} --query SecretString --output text | jq . > secret.tfvars.json || { echo "Failed to fetch secret"; exit 1; }
       - terraform init -input=false -backend-config="bucket=${PROJECT_NAME}-serverless-infra-terraform-state"
       - aws s3 cp s3://${PROJECT_NAME}-infra-terraform-state/tf_outputs.json .
-      - python3 values-gen.py --out-file=terraform.tfvars --out-case=snake
+      - echo "Generating per-env tfvars..."
+      - ENVIRONMENT=dev python3 values-gen.py --secret-file=secret.tfvars.json --var-file=tf_outputs.json --out-file=terraform.tfvars.dev --out-case=snake
+      - ENVIRONMENT=prod python3 values-gen.py --secret-file=secret.tfvars.json --var-file=tf_outputs.json --out-file=terraform.tfvars.prod --out-case=snake
   build:
     commands:
       - echo "Running Terraform Destroy..."
-      - terraform destroy -auto-approve -input=false -var-file=terraform.tfvars.json
+      - terraform destroy -auto-approve -input=false -var-file=terraform.tfvars.dev.json -var-file=terraform.tfvars.prod.json
   post_build:
     commands:
-      - rm -f terraform.tfvars.json
+      - rm -f secret.tfvars.json terraform.tfvars.dev.json terraform.tfvars.dev.yaml terraform.tfvars.prod.json terraform.tfvars.prod.yaml
