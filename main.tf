@@ -30,6 +30,9 @@ module "dev" {
   jdbc_database_name     = try(var.dev.jdbc_database_name, null)
   internal_dns_domain    = try(var.dev.internal_dns_domain, null)
   rds_dns_domain         = coalesce(try(var.dev.rds_dns_domain, null), var.prod.domain_name)
+
+  shared_internal_alb         = module.prod.internal_alb
+  listener_rule_priority_base = 200
 }
 
 data "aws_caller_identity" "current" {}

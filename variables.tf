@@ -50,4 +50,9 @@ variable "dev" {
     }))
   })
   description = "Dev environment values"
+
+  validation {
+    condition     = var.dev.vpc_id == var.prod.vpc_id
+    error_message = "dev must use prod's VPC: it shares prod's internal ALB."
+  }
 }

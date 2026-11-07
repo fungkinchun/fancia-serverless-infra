@@ -38,6 +38,14 @@ locals {
     local.is_prod ? var.project_name : "${var.project_name}_${var.environment}"
   )
   http_repositories = { for repo in var.repositories : repo.name => repo if !repo.is_cron }
+
+  owns_internal_alb = var.shared_internal_alb == null
+  internal_alb = local.owns_internal_alb ? {
+    listener_arn      = aws_lb_listener.internal[0].arn
+    dns_name          = aws_lb.internal[0].dns_name
+    zone_id           = aws_lb.internal[0].zone_id
+    security_group_id = aws_security_group.api[0].id
+  } : var.shared_internal_alb
   cors_allowed_origins = distinct(compact([
     "https://${local.dns_name}",
     "https://www.${local.dns_name}",
@@ -147,6 +155,8 @@ resource "aws_iam_role_policy" "api" {
 }
 
 resource "aws_security_group" "api" {
+  count = local.owns_internal_alb ? 1 : 0
+
   name        = "${var.project_name}-${var.environment}-api-lambda-sg"
   description = "Security group for API Lambdas and internal ALB"
   vpc_id      = var.vpc_id
@@ -167,10 +177,12 @@ resource "aws_security_group" "api" {
 }
 
 resource "aws_lb" "internal" {
+  count = local.owns_internal_alb ? 1 : 0
+
   name               = "${var.environment}-internal-alb"
   internal           = true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.api.id]
+  security_groups    = [aws_security_group.api[0].id]
   subnets            = var.subnet_ids
 
   enable_deletion_protection = false
@@ -195,7 +207,9 @@ resource "aws_lb_target_group" "internal" {
 }
 
 resource "aws_lb_listener" "internal" {
-  load_balancer_arn = aws_lb.internal.arn
+  count = local.owns_internal_alb ? 1 : 0
+
+  load_balancer_arn = aws_lb.internal[0].arn
   port              = 80
   protocol          = "HTTP"
 
@@ -213,8 +227,8 @@ resource "aws_lb_listener" "internal" {
 resource "aws_lb_listener_rule" "internal" {
   for_each = local.http_repositories
 
-  listener_arn = aws_lb_listener.internal.arn
-  priority     = 100 + index(sort(keys(local.http_repositories)), each.key)
+  listener_arn = local.internal_alb.listener_arn
+  priority     = var.listener_rule_priority_base + index(sort(keys(local.http_repositories)), each.key)
 
   action {
     type             = "forward"
@@ -240,8 +254,8 @@ resource "aws_route53_record" "internal" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.internal.dns_name
-    zone_id                = aws_lb.internal.zone_id
+    name                   = local.internal_alb.dns_name
+    zone_id                = local.internal_alb.zone_id
     evaluate_target_health = true
   }
 }
@@ -278,7 +292,7 @@ module "api_lambda" {
   schedule                          = each.value.is_cron ? coalesce(each.value.schedule, "cron(0 0 * * ? *)") : null
   is_cron                           = each.value.is_cron
   handler                           = try(each.value.handler, null)
-  security_group_ids                = [aws_security_group.api.id]
+  security_group_ids                = [local.internal_alb.security_group_id]
   enable_snapstart                  = each.value.is_cron ? false : true
   provisioned_concurrent_executions = 0
 
@@ -301,7 +315,7 @@ resource "aws_lb_target_group_attachment" "internal" {
 
   target_group_arn = aws_lb_target_group.internal[each.key].arn
   target_id        = "${module.api_lambda[each.key].function_arn}:live"
-  depends_on       = [aws_lambda_permission.internal, aws_lb_listener.internal]
+  depends_on       = [aws_lambda_permission.internal, aws_lb_listener_rule.internal]
 }
 
 module "apigateway" {
@@ -321,4 +335,19 @@ module "apigateway" {
       lambda_function_name = module.api_lambda[name].function_name
     }
   }
+}
+
+moved {
+  from = aws_security_group.api
+  to   = aws_security_group.api[0]
+}
+
+moved {
+  from = aws_lb.internal
+  to   = aws_lb.internal[0]
+}
+
+moved {
+  from = aws_lb_listener.internal
+  to   = aws_lb_listener.internal[0]
 }

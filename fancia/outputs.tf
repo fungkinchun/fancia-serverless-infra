@@ -62,3 +62,8 @@ output "private_hosted_zone_id" {
   description = "Private hosted zone ID"
   value       = var.private_hosted_zone_id
 }
+
+output "internal_alb" {
+  description = "Internal ALB used by this Environment (owned or shared)"
+  value       = local.internal_alb
+}
